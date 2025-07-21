@@ -12,7 +12,7 @@ class Unit extends Model
     }
     public function unitType()
     {
-        return $this->belongsTo(UnitType::class);
+        return $this->belongsTo(UnitType::class, 'unit_type_id');
     }
     public function scouts()
     {

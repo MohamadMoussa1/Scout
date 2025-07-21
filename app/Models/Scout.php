@@ -6,9 +6,29 @@ use Illuminate\Database\Eloquent\Model;
 
 class Scout extends Model
 {
+    protected $table = 'scouts';
+    protected $fillable = [
+        'scout_photo',
+        'first_name',
+        'father_name',
+        'last_name',
+        'birthdate',
+        'gender',
+        'contact_tel_Home',
+        'contact_tel_Cell',
+        'contact_tel_father',
+        'contact_tel_other',
+        'current_unit_id',
+        'address',
+        'region_id',
+        'town',
+        'joining_date',
+        'remarks',
+    ];
+
     public function unit()
     {
-        return $this->belongsTo(Unit::class);
+        return $this->belongsTo(Unit::class, 'current_unit_id');
     }
     public function region()
     {
