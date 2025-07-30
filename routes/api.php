@@ -3,9 +3,19 @@
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ScoutController;
+use App\Http\Controllers\API\AuthController;
+// API Routes\
+//-------------//
+//Authentication routes
+// Route to register a new user
+Route::post('/register', [AuthController::class, 'register']);
+// Route to login a user
+Route::post('/login', [AuthController::class, 'login']);
+// Route to logout a user
+Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 
-// API Routes
-//Scour crud api
+
+//Scout crud api
 //-------------//
 // Route to get all scouts
 Route::get('/scouts', [ScoutController::class, 'index']);
