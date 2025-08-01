@@ -99,38 +99,37 @@ class ScoutController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, string $id)
-    {
-        $scout = Scout::findOrFail($id);
-        $validatedData = $request->validate([
-            'scout_photo' => 'required|string|max:255',
-            'first_name' => 'required|string|max:255',
-            'father_name' => 'required|string|max:255',
-            'last_name' => 'required|string|max:255',
-            'birthdate' => 'required|date',
-            'gender' => 'required|string|max:10',
-            'contact_tel_Home' => 'required|string|max:15',
-            'contact_tel_Cell' => 'required|string|max:15',
-            'contact_tel_father' => 'required|string|max:15',
-            'contact_tel_other' => 'nullable|string|max:15',
-            'current_unit_id' => 'required|exists:units,id',
-            'address' => 'required|string|max:255',
-            'region_id' => 'required|exists:region,id',
-            'town' => 'required|string|max:100',
-            'joining_date' => 'required|date',
-            'remarks' => 'nullable|string|max:500',
-        ]);
-        $scout->update($validatedData);
-        return response()->json(
-            [
-                'message' => 'Scout updated successfully',
-                'success' => true,
-                'data' => $scout,
-            ],
-            200);
+    public function update(Request $request, string $id){
+    $scout = Scout::findOrFail($id);
 
+    $validatedData = $request->validate([
+        'scout_photo' => 'sometimes|string|max:255',
+        'first_name' => 'sometimes|string|max:255',
+        'father_name' => 'sometimes|string|max:255',
+        'last_name' => 'sometimes|string|max:255',
+        'birthdate' => 'sometimes|date',
+        'gender' => 'sometimes|string|max:10',
+        'contact_tel_Home' => 'sometimes|string|max:15',
+        'contact_tel_Cell' => 'sometimes|string|max:15',
+        'contact_tel_father' => 'sometimes|string|max:15',
+        'contact_tel_other' => 'sometimes|nullable|string|max:15',
+        'current_unit_id' => 'sometimes|exists:units,id',
+        'address' => 'sometimes|string|max:255',
+        'region_id' => 'sometimes|exists:region,id',
+        'town' => 'sometimes|string|max:100',
+        'joining_date' => 'sometimes|date',
+        'remarks' => 'sometimes|nullable|string|max:500',
+    ]);
 
-    }
+    $scout->update($validatedData);
+
+    return response()->json([
+        'message' => 'Scout updated successfully',
+        'success' => true,
+        'data' => $scout,
+    ], 200);
+}
+
 
     /**
      * Remove the specified resource from storage.

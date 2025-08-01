@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Scout Management Dashboard</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+    }
+    .dashboard {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #2c3e50;
+    }
+    .section {
+      margin-bottom: 2rem;
+      padding: 1rem;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input[type="text"], input[type="number"] {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1a242f;
+    }
+    .result {
+      margin-top: 1rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="dashboard">
+    <h2>Scout Management Dashboard</h2>
+
+    <!-- View All Scouts -->
+    <div class="section">
+      <h3>View All Scouts</h3>
+      <button onclick="viewAllScouts()">Show Scouts</button>
+      <button onclick="document.getElementById('scoutList').innerHTML = '';">Close Results</button>
+      <div id="scoutList" class="result"></div>
+    </div>
+
+    <!-- Search Scout by ID -->
+    <!-- Replace your current Search Scout by ID section with this -->
+
+    <div class="section">
+      <h3>Search Scout</h3>
+
+      <label>
+        <input type="radio" name="searchType" value="id" checked> Search by ID
+      </label>
+      <label>
+        <input type="radio" name="searchType" value="name"> Search by Name
+      </label>
+
+      <label for="searchInput" style="margin-top: 1rem;">Enter ID or Name</label>
+      <input type="text" id="searchInput" placeholder="Enter Scout ID or Name" />
+      <button onclick="searchScout()">Search</button>
+      <button onclick="document.getElementById('searchResult').innerHTML = '';">Close Results</button>
+      <div id="searchResult" class="result"></div>
+    </div>
+
+
+    <!-- Update Scout -->
+    <!-- Update Scout -->
+<div class="section">
+  <h3>Update Scout</h3>
+  <label for="updateId">Scout ID</label>
+  <input type="number" id="updateId" placeholder="Enter Scout ID" />
+
+  <label for="updateFirstName">First Name</label>
+  <input type="text" id="updateFirstName" placeholder="Enter First Name" />
+
+  <label for="updateFatherName">Father Name</label>
+  <input type="text" id="updateFatherName" placeholder="Enter Father Name" />
+
+  <label for="updateLastName">Last Name</label>
+  <input type="text" id="updateLastName" placeholder="Enter Last Name" />
+
+  
+
+  <label for="updateContactCell">Contact Cell</label>
+  <input type="text" id="updateContactCell" placeholder="Enter Contact Cell" />
+
+  <label for="updateContactFather">Contact Father</label>
+  <input type="text" id="updateContactFather" placeholder="Enter Contact Father" />
+
+  <button onclick="updateScout()">Update</button>
+  <div id="updateResult" class="result"></div>
+</div>
+
+
+    <!-- Delete Scout -->
+    <div class="section">
+      <h3>Delete Scout</h3>
+      <label for="deleteId">Scout ID</label>
+      <input type="number" id="deleteId" placeholder="Enter Scout ID to delete" />
+      <button onclick="deleteScout()">Delete</button>
+      <div id="deleteResult" class="result"></div>
+    </div>
+  </div>
+
+  <script>
+  async function viewAllScouts() {
+  const list = document.getElementById("scoutList");
+  list.textContent = "Loading...";
+
+  try {
+    const res = await fetch("http://scout.test/api/scouts");
+    if (!res.ok) throw new Error(`HTTP error! status: ${res.status}`);
+
+    const data = await res.json();
+
+    if (Array.isArray(data.data)) {
+      if (data.data.length === 0) {
+        list.textContent = "No scouts found.";
+        return;
+      }
+
+      list.innerHTML = data.data.map(s => {
+        return `
+          <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <strong>ID:</strong> ${s.id} <br>
+            <strong>Photo:</strong> ${s.scout_photo || 'N/A'} <br>
+            <strong>First Name:</strong> ${s.first_name || 'N/A'} <br>
+            <strong>Father Name:</strong> ${s.father_name || 'N/A'} <br>
+            <strong>Last Name:</strong> ${s.last_name || 'N/A'} <br>
+            <strong>Birthdate:</strong> ${s.birthdate || 'N/A'} <br>
+            <strong>Gender:</strong> ${s.gender || 'N/A'} <br>
+            <strong>Contact Home:</strong> ${s.contact_tel_Home || 'N/A'} <br>
+            <strong>Contact Cell:</strong> ${s.contact_tel_Cell || 'N/A'} <br>
+            <strong>Contact Father:</strong> ${s.contact_tel_father || 'N/A'} <br>
+            <strong>Contact Other:</strong> ${s.contact_tel_other || 'N/A'} <br>
+            <strong>Current Unit ID:</strong> ${s.current_unit_id || 'N/A'} <br>
+            <strong>Address:</strong> ${s.address || 'N/A'} <br>
+            <strong>Region ID:</strong> ${s.region_id || 'N/A'} <br>
+            <strong>Town:</strong> ${s.town || 'N/A'} <br>
+            <strong>Joining Date:</strong> ${s.joining_date || 'N/A'} <br>
+            <strong>Remarks:</strong> ${s.remarks || 'N/A'} <br>
+            <strong>Created At:</strong> ${s.created_at || 'N/A'} <br>
+            <strong>Updated At:</strong> ${s.updated_at || 'N/A'} <br>
+
+            <div style="margin-left:20px; margin-top:10px;">
+              <strong>Region:</strong><br>
+              &nbsp;&nbsp;ID: ${s.region?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${s.region?.region_name || 'N/A'}<br>
+              &nbsp;&nbsp;Remarks: ${s.region?.remarks || 'N/A'}<br>
+
+              <strong>Unit:</strong><br>
+              &nbsp;&nbsp;ID: ${s.unit?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${s.unit?.unit_name || 'N/A'}<br>
+              &nbsp;&nbsp;Unit Type ID: ${s.unit?.unit_type_id || 'N/A'}<br>
+              &nbsp;&nbsp;Troop ID: ${s.unit?.troop_id || 'N/A'}<br>
+              &nbsp;&nbsp;Remarks: ${s.unit?.remarks || 'N/A'}<br>
+
+              <strong>Unit Type:</strong><br>
+              &nbsp;&nbsp;&nbsp;&nbsp;ID: ${s.unit?.unit_type?.id || 'N/A'}<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;Name: ${s.unit?.unit_type?.unit_name || 'N/A'}<br>
+              &nbsp;&nbsp;&nbsp;&nbsp;Remarks: ${s.unit?.unit_type?.remarks || 'N/A'}<br>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+          } else {
+            list.textContent = "Unexpected response format.";
+            console.error("API response is not an array:", data);
+          }
+
+        } catch (error) {
+          list.textContent = "Failed to load scouts.";
+          console.error("Error fetching scouts:", error);
+        }
+      }
+
+
+  async function searchScout() {
+  const searchType = document.querySelector('input[name="searchType"]:checked').value;
+  const query = document.getElementById("searchInput").value.trim();
+  const result = document.getElementById("searchResult");
+
+  if (!query) {
+    alert(`Please enter a ${searchType.toUpperCase()}`);
+    return;
+  }
+
+  result.textContent = "Searching...";
+
+  try {
+    let scouts = [];
+
+    if (searchType === 'id') {
+      // Fetch by ID
+      const res = await fetch(`http://scout.test/api/scouts/${query}`);
+      if (!res.ok) {
+        result.textContent = "Scout not found.";
+        return;
+      }
+      const data = await res.json();
+      scouts = [data.data];
+    } else {
+      // Search by Name - fetch all scouts then filter client-side
+      const res = await fetch(`http://scout.test/api/scouts`);
+      if (!res.ok) {
+        result.textContent = "Failed to fetch scouts.";
+        return;
+      }
+      const data = await res.json();
+
+      if (!Array.isArray(data.data)) {
+        result.textContent = "Unexpected response format.";
+        return;
+      }
+
+      scouts = data.data.filter(scout => {
+        const fullName = `${scout.first_name} ${scout.father_name} ${scout.last_name}`.toLowerCase();
+        return fullName.includes(query.toLowerCase());
+      });
+    }
+
+    if (scouts.length === 0) {
+      result.textContent = "No scouts found.";
+      return;
+    }
+
+    result.innerHTML = scouts.map(s => `
+      <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+        <strong>ID:</strong> ${s.id} <br>
+        <strong>Photo:</strong> ${s.scout_photo || 'N/A'} <br>
+        <strong>First Name:</strong> ${s.first_name || 'N/A'} <br>
+        <strong>Father Name:</strong> ${s.father_name || 'N/A'} <br>
+        <strong>Last Name:</strong> ${s.last_name || 'N/A'} <br>
+        <strong>Birthdate:</strong> ${s.birthdate || 'N/A'} <br>
+        <strong>Gender:</strong> ${s.gender || 'N/A'} <br>
+        <strong>Contact Home:</strong> ${s.contact_tel_Home || 'N/A'} <br>
+        <strong>Contact Cell:</strong> ${s.contact_tel_Cell || 'N/A'} <br>
+        <strong>Contact Father:</strong> ${s.contact_tel_father || 'N/A'} <br>
+        <strong>Contact Other:</strong> ${s.contact_tel_other || 'N/A'} <br>
+        <strong>Current Unit ID:</strong> ${s.current_unit_id || 'N/A'} <br>
+        <strong>Address:</strong> ${s.address || 'N/A'} <br>
+        <strong>Region ID:</strong> ${s.region_id || 'N/A'} <br>
+        <strong>Town:</strong> ${s.town || 'N/A'} <br>
+        <strong>Joining Date:</strong> ${s.joining_date || 'N/A'} <br>
+        <strong>Remarks:</strong> ${s.remarks || 'N/A'} <br>
+        <strong>Created At:</strong> ${s.created_at || 'N/A'} <br>
+        <strong>Updated At:</strong> ${s.updated_at || 'N/A'} <br>
+
+        <div style="margin-left:20px; margin-top:10px;">
+          <strong>Region:</strong><br>
+          &nbsp;&nbsp;ID: ${s.region?.id || 'N/A'}<br>
+          &nbsp;&nbsp;Name: ${s.region?.region_name || 'N/A'}<br>
+          &nbsp;&nbsp;Remarks: ${s.region?.remarks || 'N/A'}<br>
+
+          <strong>Unit:</strong><br>
+          &nbsp;&nbsp;ID: ${s.unit?.id || 'N/A'}<br>
+          &nbsp;&nbsp;Name: ${s.unit?.unit_name || 'N/A'}<br>
+          &nbsp;&nbsp;Unit Type ID: ${s.unit?.unit_type_id || 'N/A'}<br>
+          &nbsp;&nbsp;Troop ID: ${s.unit?.troop_id || 'N/A'}<br>
+          &nbsp;&nbsp;Remarks: ${s.unit?.remarks || 'N/A'}<br>
+
+          <strong>Unit Type:</strong><br>
+          &nbsp;&nbsp;&nbsp;&nbsp;ID: ${s.unit?.unit_type?.id || 'N/A'}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;Name: ${s.unit?.unit_type?.unit_name || 'N/A'}<br>
+          &nbsp;&nbsp;&nbsp;&nbsp;Remarks: ${s.unit?.unit_type?.remarks || 'N/A'}<br>
+        </div>
+      </div>
+    `).join("");
+
+  } catch (error) {
+    result.textContent = "Failed to fetch scout.";
+    console.error("Error searching scout:", error);
+  }
+}
+
+
+
+  function updateScout() {
+  const id = document.getElementById("updateId").value;
+  const firstName = document.getElementById("updateFirstName").value.trim();
+  const lastName = document.getElementById("updateLastName").value.trim();
+  const fatherName = document.getElementById("updateFatherName").value.trim();
+  const contactCell = document.getElementById("updateContactCell").value.trim();
+  const contactFather = document.getElementById("updateContactFather").value.trim();
+  const result = document.getElementById("updateResult");
+
+  if (!id) {
+    alert("Scout ID is required.");
+    return;
+  }
+
+  // Construct only the fields that are filled in
+  const payload = {};
+  if (firstName) payload.first_name = firstName;
+  if (lastName) payload.last_name = lastName;
+  if (fatherName) payload.father_name = fatherName;
+  if (contactCell) payload.contact_tel_Cell = contactCell;
+  if (contactFather) payload.contact_tel_father = contactFather;
+
+  if (Object.keys(payload).length === 0) {
+    alert("Enter at least one field to update.");
+    return;
+  }
+
+  result.textContent = "Updating...";
+
+  fetch(`http://scout.test/api/scouts/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload)
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        result.textContent = "Scout updated successfully.";
+      } else {
+        result.textContent = data.message || "Update failed.";
+      }
+    })
+    .catch(err => {
+      console.error("Update error:", err);
+      result.textContent = "Update error.";
+    });
+  }
+
+
+  function deleteScout() {
+    const id = document.getElementById("deleteId").value;
+    const result = document.getElementById("deleteResult");
+
+    if (!id) return alert("Please enter an ID");
+
+    result.textContent = "Deleting...";
+
+    fetch(`http://scout.test/api/scouts/${id}`, {
+      method: 'DELETE',
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          result.textContent = "Scout deleted successfully.";
+        } else {
+          result.textContent = data.message || "Delete failed.";
+        }
+      })
+      .catch(() => {
+        result.textContent = "Delete error.";
+      });
+  }
+</script>
+
+</body>
+</html>

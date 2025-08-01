@@ -12,7 +12,12 @@ class BadgeController extends Controller
      */
     public function index()
     {
-        //
+        $badge=Badge::all(); // Assuming Badge is a model that interacts with the badges table
+        return response()->json([
+            'message' => 'Badges retrieved successfully',
+            'data' => $badge,
+        ], 200);
+    
     }
 
     /**
@@ -20,7 +25,7 @@ class BadgeController extends Controller
      */
     public function create()
     {
-        //
+        
     }
 
     /**
@@ -28,7 +33,18 @@ class BadgeController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'badge_name' => 'required|string|max:255',
+            'description' => 'nullable|string|max:500',
+            'remarks' => 'nullable|string|max:500',
+        ]);
+
+        $badge = Badge::create($validatedData);
+
+        return response()->json([
+            'message' => 'Badge created successfully',
+            'data' => $badge,
+        ], 201);
     }
 
     /**
