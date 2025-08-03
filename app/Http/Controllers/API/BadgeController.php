@@ -10,15 +10,15 @@ class BadgeController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
-    {
-        $badge=Badge::all(); // Assuming Badge is a model that interacts with the badges table
-        return response()->json([
-            'message' => 'Badges retrieved successfully',
-            'data' => $badge,
-        ], 200);
+    // public function index()
+    // {
+    //     $badge=Badge::all(); // Assuming Badge is a model that interacts with the badges table
+    //     return response()->json([
+    //         'message' => 'Badges retrieved successfully',
+    //         'data' => $badge,
+    //     ], 200);
     
-    }
+    // }
 
     /**
      * Show the form for creating a new resource.

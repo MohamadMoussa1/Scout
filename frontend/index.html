@@ -5,6 +5,37 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>Scout Management Dashboard</title>
   <style>
+    @media (max-width: 700px) {
+      body {
+        padding: 0.5rem;
+      }
+      .dashboard {
+        max-width: 98vw;
+        padding: 0.7rem 0.2rem;
+        border-radius: 7px;
+      }
+      h2, h3 {
+        font-size: 1.15rem;
+      }
+      .section {
+        padding: 0.7rem 0.2rem;
+        border-radius: 7px;
+        margin-bottom: 1.1rem;
+      }
+      input[type="text"], input[type="number"], input[type="date"], select {
+        width: 100%;
+        font-size: 1rem;
+        padding: 0.5rem;
+      }
+      button {
+        width: 100%;
+        margin-right: 0;
+        margin-top: 0.5rem;
+        font-size: 1rem;
+        padding: 0.6rem 0;
+      }
+    }
+
     body {
       font-family: Arial, sans-serif;
       background: #f4f6f8;
@@ -135,6 +166,25 @@
       <div id="badgesResult" class="result" style="margin-top: 1rem;"></div>
     </div>
     
+<!-- Get Scout Ranks by ID -->
+<div class="section">
+  <h3>Get Scout Ranks</h3>
+
+  <label>
+    <input type="radio" name="rankSearchType" value="id" checked> Search by ID
+  </label>
+  <label>
+    <input type="radio" name="rankSearchType" value="name"> Search by Name
+  </label>
+
+  <label for="rankScoutInput" style="margin-top: 1rem;">Enter Scout ID or Name</label>
+  <input type="text" id="rankScoutInput" placeholder="Enter Scout ID or Name" />
+
+  <button onclick="getScoutRanks()">Get Ranks</button>
+  <button onclick="document.getElementById('ranksResult').innerHTML = '';">Clear Ranks</button>
+
+  <div id="ranksResult" class="result"></div>
+</div>
 
 
     <!-- Update Scout -->
@@ -322,6 +372,114 @@
       resultDiv.innerHTML = `<span style="color:red;">Failed to fetch scout badges: ${err.message}</span>`;
     }
   }
+  async function getScoutRanks() {
+  const input = document.getElementById('rankScoutInput').value.trim();
+  const resultDiv = document.getElementById('ranksResult');
+  const searchType = document.querySelector('input[name="rankSearchType"]:checked').value;
+  resultDiv.innerHTML = 'Loading...';
+
+  if (!input) {
+    resultDiv.innerHTML = `<span style="color:red;">Please enter a ${searchType.toUpperCase()}.</span>`;
+    return;
+  }
+
+  const token = localStorage.getItem('token');
+  if (!token) {
+    resultDiv.innerHTML = '<span style="color:red;">You are not logged in. Please log in first.</span>';
+    return;
+  }
+
+  const headers = {
+    'Authorization': 'Bearer ' + token
+  };
+
+  try {
+    let scouts = [];
+
+    if (searchType === 'id') {
+      // Fetch single scout by ID
+      const res = await fetch(`http://scout.test/api/scouts/${input}`, { headers });
+      if (!res.ok) throw new Error('Scout not found.');
+
+      const data = await res.json();
+      if (!data.success || !data.data) throw new Error('Scout not found.');
+      scouts = [data.data];
+    } else {
+      // Fetch all scouts and filter by name
+      const res = await fetch('http://scout.test/api/scouts', { headers });
+      if (!res.ok) throw new Error('Failed to fetch scouts.');
+
+      const data = await res.json();
+      if (!data.success || !Array.isArray(data.data)) throw new Error('Invalid scout data.');
+
+      const inputLower = input.toLowerCase();
+      scouts = data.data.filter(s => {
+        const fullName = `${s.first_name} ${s.father_name} ${s.last_name}`.toLowerCase();
+        return (
+          s.first_name?.toLowerCase() === inputLower ||
+          s.father_name?.toLowerCase() === inputLower ||
+          s.last_name?.toLowerCase() === inputLower ||
+          fullName.includes(inputLower)
+        );
+      });
+
+      if (scouts.length === 0) throw new Error('No scout found with that name.');
+    }
+
+    // Loop through each scout and get ranks
+    let html = '';
+    for (const scout of scouts) {
+      const rankRes = await fetch(`http://scout.test/api/scouts/${scout.id}/scoutranks`, { headers });
+
+      html += `<div style="border:1px solid #2c3e50; margin:10px; padding:10px; background:#f9f9f9;">
+        <strong>ID:</strong> ${scout.id} <br>
+        <strong>Name:</strong> ${scout.first_name || ''} ${scout.father_name || ''} ${scout.last_name || ''} <br>
+        <strong>Birthdate:</strong> ${scout.birthdate || 'N/A'} <br>
+        <strong>Gender:</strong> ${scout.gender || 'N/A'} <br>
+        <strong>Contact Cell:</strong> ${scout.contact_tel_Cell || 'N/A'} <br>
+        <strong>Address:</strong> ${scout.address || 'N/A'} <br>
+      </div>`;
+
+      if (!rankRes.ok) {
+        html += `<span style="color:orange;">Could not fetch ranks for scout ID ${scout.id}.</span>`;
+        continue;
+      }
+
+      const rankData = await rankRes.json();
+
+      if (!rankData.success || !Array.isArray(rankData.data) || rankData.data.length === 0) {
+        html += `<span style="color:orange;">No ranks found for this scout.</span>`;
+        continue;
+      }
+
+      html += rankData.data.map(rank => `
+        <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+          <strong>ScoutRank ID:</strong> ${rank.id} <br>
+          <strong>Rank ID:</strong> ${rank.rank_id} <br>
+          <strong>Scout ID:</strong> ${rank.scout_id} <br>
+          <strong>Issued Date:</strong> ${rank.issued_date || 'N/A'} <br>
+          <strong>Created At:</strong> ${rank.created_at || 'N/A'} <br>
+          <strong>Updated At:</strong> ${rank.updated_at || 'N/A'} <br>
+          <div style="margin-left:20px; margin-top:10px;">
+            <strong>Rank Info:</strong><br>
+            &nbsp;&nbsp;ID: ${rank.rank?.id || 'N/A'}<br>
+            &nbsp;&nbsp;Name: ${rank.rank?.rank_name || 'N/A'}<br>
+            &nbsp;&nbsp;Description: ${rank.rank?.description || 'N/A'}<br>
+            &nbsp;&nbsp;Created At: ${rank.rank?.created_at || 'N/A'}<br>
+            &nbsp;&nbsp;Updated At: ${rank.rank?.updated_at || 'N/A'}<br>
+          </div>
+        </div>
+      `).join('');
+    }
+
+    resultDiv.innerHTML = html;
+
+  } catch (error) {
+    console.error('Error fetching scout ranks:', error);
+    resultDiv.innerHTML = `<span style="color:red;">${error.message}</span>`;
+  }
+}
+
 
   async function viewAllScouts() {
   const list = document.getElementById("scoutList");

@@ -15,7 +15,7 @@ use App\Models\ActivityReport;
 use App\Models\Participation;
 use App\Models\Troop;
 use App\Models\Badge;
-
+use App\Models\Rank;
 class ScoutController extends Controller
 {
     /**
@@ -148,4 +148,15 @@ class ScoutController extends Controller
             'data' => $scoutBadges,
         ], 200);
     }
+    public function getScoutRanks($scout)
+    {
+        $scoutRanks = AssigneRank::with('rank')
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Ranks retrieved successfully',
+            'success' => true,
+            'data' => $scoutRanks,
+        ], 200);
+    }   
 }
