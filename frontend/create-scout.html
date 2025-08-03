@@ -128,48 +128,56 @@
   <script>
     // Function to submit new scout data
     async function createScout() {
-      const payload = {
-        scout_photo: document.getElementById("scout_photo").value.trim(),
-        first_name: document.getElementById("first_name").value.trim(),
-        father_name: document.getElementById("father_name").value.trim(),
-        last_name: document.getElementById("last_name").value.trim(),
-        birthdate: document.getElementById("birthdate").value,
-        gender: document.getElementById("gender").value.trim(),
-        contact_tel_Home: document.getElementById("contact_tel_Home").value.trim(),
-        contact_tel_Cell: document.getElementById("contact_tel_Cell").value.trim(),
-        contact_tel_father: document.getElementById("contact_tel_father").value.trim(),
-        contact_tel_other: document.getElementById("contact_tel_other").value.trim(),
-        current_unit_id: document.getElementById("current_unit_id").value,
-        address: document.getElementById("address").value.trim(),
-        region_id: document.getElementById("region_id").value,
-        troop_id: document.getElementById("troop_id").value,
-        town: document.getElementById("town").value.trim(),
-        joining_date: document.getElementById("joining_date").value,
-        remarks: document.getElementById("remarks").value.trim()
-      };
+  const payload = {
+    scout_photo: document.getElementById("scout_photo").value.trim(),
+    first_name: document.getElementById("first_name").value.trim(),
+    father_name: document.getElementById("father_name").value.trim(),
+    last_name: document.getElementById("last_name").value.trim(),
+    birthdate: document.getElementById("birthdate").value,
+    gender: document.getElementById("gender").value.trim(),
+    contact_tel_Home: document.getElementById("contact_tel_Home").value.trim(),
+    contact_tel_Cell: document.getElementById("contact_tel_Cell").value.trim(),
+    contact_tel_father: document.getElementById("contact_tel_father").value.trim(),
+    contact_tel_other: document.getElementById("contact_tel_other").value.trim(),
+    address: document.getElementById("address").value.trim(),
+    region_id: document.getElementById("region_id").value,
+    troop_id: document.getElementById("troop_id").value,
+    current_unit_id: document.getElementById("current_unit_id").value,
+    town: document.getElementById("town").value.trim(),
+    joining_date: document.getElementById("joining_date").value,
+    remarks: document.getElementById("remarks").value.trim()
+  };
 
-      const result = document.getElementById("createResult");
-      result.textContent = "Submitting...";
+  console.log("Submitting scout with troop_id:", payload.troop_id);
+  console.log("Payload sent to backend:", payload);
 
-      try {
-        const res = await fetch("http://scout.test/api/scouts", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify(payload)
-        });
+  const result = document.getElementById("createResult");
+  result.textContent = "Submitting...";
 
-        const data = await res.json();
+  if (!payload.troop_id) {
+    result.textContent = "Please select a troop.";
+    return;
+  }
 
-        if (data.success) {
-          result.textContent = "Scout created successfully.";
-        } else {
-          result.textContent = data.message || "Creation failed.";
-        }
-      } catch (error) {
-        console.error("Error:", error);
-        result.textContent = "Error submitting scout.";
-      }
+  try {
+    const res = await fetch("http://scout.test/api/scouts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload)
+    });
+
+    const data = await res.json();
+
+    if (data.success) {
+      result.textContent = "Scout created successfully.";
+    } else {
+      result.textContent = data.message || "Creation failed.";
     }
+  } catch (error) {
+    console.error("Error:", error);
+    result.textContent = "Error submitting scout.";
+  }
+}
 
     // Load regions from API
     async function loadRegions() {
@@ -200,6 +208,7 @@
       try {
         const res = await fetch(`http://scout.test/api/regions/${regionId}/troops`);
         const troops = await res.json();
+        console.log("Populated troops:", troops); // Debug log
         troopSelect.innerHTML = '<option value="">Select a troop</option>';
 
         troops.forEach(troop => {
@@ -267,6 +276,7 @@
     document.getElementById("troop_id").addEventListener("change", function (event) {
       event.preventDefault();
       const troopId = this.value;
+      console.log("Selected troopId:", troopId); // Debug log
       loadUnitsByTroop(troopId);
     });
 

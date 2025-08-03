@@ -21,6 +21,7 @@ class Scout extends Model
         'current_unit_id',
         'address',
         'region_id',
+        'troop_id',
         'town',
         'joining_date',
         'remarks',
