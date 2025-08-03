@@ -57,11 +57,27 @@
       margin-top: 1rem;
       color: #333;
     }
+    .logout-btn {
+      float: right;
+      margin-top: -2.5rem;
+      background: #e74c3c;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      padding: 0.5rem 1.2rem;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    .logout-btn:hover {
+      background: #c0392b;
+    }
   </style>
 </head>
 <body>
   <div class="dashboard">
     <h2>Scout Management Dashboard</h2>
+    <button id="logoutBtn" class="logout-btn" onclick="logout()">Logout</button>
 
     <!-- View All Scouts -->
     <div class="section">
@@ -69,6 +85,12 @@
       <button onclick="viewAllScouts()">Show Scouts</button>
       <button onclick="document.getElementById('scoutList').innerHTML = '';">Close Results</button>
       <div id="scoutList" class="result"></div>
+    </div>
+    <!-- Create Scout -->
+    <div class="section">
+      <h3>Create New Scout</h3>
+      <p>Click the button below to go to the scout creation page.</p>
+      <button onclick="location.href='create-scout.html'">Add a scout</button>
     </div>
 
     <!-- Search Scout by ID -->
@@ -132,6 +154,21 @@
   </div>
 
   <script>
+    // Prevent access if not logged in
+    window.onload = function() {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        window.location.href = 'login.html';
+      }
+    }
+
+    function logout() {
+      // Clear authentication tokens if any
+      localStorage.clear();
+      sessionStorage.clear();
+      window.location.href = 'login.html';
+    }
+
   async function viewAllScouts() {
   const list = document.getElementById("scoutList");
   list.textContent = "Loading...";

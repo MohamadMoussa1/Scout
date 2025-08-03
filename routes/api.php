@@ -4,6 +4,8 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ScoutController;
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\TroopController;
 // API Routes\
 //-------------//
 //Authentication routes
@@ -30,3 +32,13 @@ Route::delete('/scouts/{id}', [ScoutController::class, 'destroy']);
 Route::get('/user', function (Request $request) {
     return $request->user();
 })->middleware('auth:sanctum');
+
+
+
+
+Route::get('/regions', [RegionController::class, 'index']);
+
+// Route to get troops by region ID// Return troops by region ID
+Route::get('/regions/{region}/troops', [RegionController::class, 'getTroopsByRegion']);
+//Route to get units by troop ID
+Route::get('/troops/{troop}/units', [TroopController::class, 'getUnitsByTroop']);

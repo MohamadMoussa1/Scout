@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Create Scout</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: #f4f6f8;
+      margin: 0;
+      padding: 2rem;
+    }
+    .form-container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    h2 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #2c3e50;
+    }
+    label {
+      display: block;
+      margin-top: 1rem;
+    }
+    input[type="text"],
+    input[type="date"],
+    select {
+      width: 100%;
+      padding: 0.5rem;
+      margin-top: 0.5rem;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    button {
+      margin-top: 1rem;
+      padding: 0.6rem 1.2rem;
+      background: #2c3e50;
+      color: #fff;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1a242f;
+    }
+    .result {
+      margin-top: 1rem;
+      color: #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="form-container">
+    <h2>Create New Scout</h2>
+
+    <label>Scout Photo</label>
+    <input type="text" id="scout_photo" />
+
+    <label>First Name</label>
+    <input type="text" id="first_name" />
+
+    <label>Father Name</label>
+    <input type="text" id="father_name" />
+
+    <label>Last Name</label>
+    <input type="text" id="last_name" />
+
+    <label>Birthdate</label>
+    <input type="date" id="birthdate" />
+
+    <label>Gender</label>
+    <select id="gender">
+      <option value="male">Male</option>
+      <option value="female">Female</option>
+    </select>
+
+    <label>Contact Home</label>
+    <input type="text" id="contact_tel_Home" />
+
+    <label>Contact Cell</label>
+    <input type="text" id="contact_tel_Cell" />
+
+    <label>Contact Father</label>
+    <input type="text" id="contact_tel_father" />
+
+    <label>Contact Other</label>
+    <input type="text" id="contact_tel_other" />
+
+    <label>Address</label>
+    <input type="text" id="address" />
+
+    <label>Region</label>
+    <select id="region_id">
+      <option value="">Loading regions...</option>
+    </select>
+
+    <label>Troop</label>
+    <select id="troop_id">
+      <option value="">Select a troop</option>
+    </select>
+
+    <label>Unit</label>
+    <select id="current_unit_id">
+      <option value="">Select a unit</option>
+    </select>
+
+    <label>Town</label>
+    <input type="text" id="town" />
+
+    <label>Joining Date</label>
+    <input type="date" id="joining_date" />
+
+    <label>Remarks</label>
+    <input type="text" id="remarks" />
+
+    <button onclick="createScout()">Create Scout</button>
+    <button onclick="window.location.href='index.html'">Back to Dashboard</button>
+
+    <div id="createResult" class="result"></div>
+  </div>
+
+  <script>
+    // Function to submit new scout data
+    async function createScout() {
+      const payload = {
+        scout_photo: document.getElementById("scout_photo").value.trim(),
+        first_name: document.getElementById("first_name").value.trim(),
+        father_name: document.getElementById("father_name").value.trim(),
+        last_name: document.getElementById("last_name").value.trim(),
+        birthdate: document.getElementById("birthdate").value,
+        gender: document.getElementById("gender").value.trim(),
+        contact_tel_Home: document.getElementById("contact_tel_Home").value.trim(),
+        contact_tel_Cell: document.getElementById("contact_tel_Cell").value.trim(),
+        contact_tel_father: document.getElementById("contact_tel_father").value.trim(),
+        contact_tel_other: document.getElementById("contact_tel_other").value.trim(),
+        current_unit_id: document.getElementById("current_unit_id").value,
+        address: document.getElementById("address").value.trim(),
+        region_id: document.getElementById("region_id").value,
+        troop_id: document.getElementById("troop_id").value,
+        town: document.getElementById("town").value.trim(),
+        joining_date: document.getElementById("joining_date").value,
+        remarks: document.getElementById("remarks").value.trim()
+      };
+
+      const result = document.getElementById("createResult");
+      result.textContent = "Submitting...";
+
+      try {
+        const res = await fetch("http://scout.test/api/scouts", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+
+        if (data.success) {
+          result.textContent = "Scout created successfully.";
+        } else {
+          result.textContent = data.message || "Creation failed.";
+        }
+      } catch (error) {
+        console.error("Error:", error);
+        result.textContent = "Error submitting scout.";
+      }
+    }
+
+    // Load regions from API
+    async function loadRegions() {
+      try {
+        const res = await fetch("http://scout.test/api/regions");
+        const regions = await res.json();
+        const select = document.getElementById("region_id");
+        select.innerHTML = '<option value="">Select a region</option>';
+
+        regions.forEach(region => {
+          const option = document.createElement("option");
+          option.value = region.id;
+          option.textContent = region.region_name;
+          select.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Failed to load regions:", error);
+        const select = document.getElementById("region_id");
+        select.innerHTML = '<option value="">Failed to load regions</option>';
+      }
+    }
+
+    // Load troops when region is selected
+    async function loadTroopsByRegion(regionId) {
+      const troopSelect = document.getElementById("troop_id");
+      troopSelect.disabled = true; // disable during load
+      troopSelect.innerHTML = '<option value="">Loading troops...</option>';
+      try {
+        const res = await fetch(`http://scout.test/api/regions/${regionId}/troops`);
+        const troops = await res.json();
+        troopSelect.innerHTML = '<option value="">Select a troop</option>';
+
+        troops.forEach(troop => {
+          const option = document.createElement("option");
+          option.value = troop.id;
+          option.textContent = troop.troop_name;
+          troopSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Failed to load troops:", error);
+        troopSelect.innerHTML = '<option value="">Failed to load troops</option>';
+      }
+      troopSelect.disabled = false;
+    }
+
+    // Load units when troop is selected
+    async function loadUnitsByTroop(troopId) {
+      const unitSelect = document.getElementById("current_unit_id");
+
+      if (!troopId) {
+        unitSelect.innerHTML = '<option value="">Select a unit</option>';
+        return;
+      }
+
+      unitSelect.disabled = true;
+      unitSelect.innerHTML = '<option value="">Loading units...</option>';
+
+      try {
+        const res = await fetch(`http://scout.test/api/troops/${troopId}/units`);
+        if (!res.ok) {
+          const text = await res.text();
+          console.error(`Units API HTTP error: ${res.status}`, text);
+          throw new Error(`HTTP error: ${res.status}`);
+        }
+        const data = await res.json();
+        console.log("Units API response:", data);
+        const units = Array.isArray(data) ? data : (data.data || []);
+
+        unitSelect.innerHTML = '<option value="">Select a unit</option>';
+        units.forEach(unit => {
+          const option = document.createElement("option");
+          option.value = unit.id;
+          option.textContent = unit.unit_name;
+          unitSelect.appendChild(option);
+        });
+      } catch (error) {
+        console.error("Error loading units:", error);
+        unitSelect.innerHTML = '<option value="">Failed to load units</option>';
+      }
+      unitSelect.disabled = false;
+    }
+
+    // Region change event
+    document.getElementById("region_id").addEventListener("change", function (event) {
+      event.preventDefault();
+      const regionId = this.value;
+      if (regionId) {
+        loadTroopsByRegion(regionId);
+      } else {
+        document.getElementById("troop_id").innerHTML = '<option value="">Select a troop</option>';
+      }
+    });
+
+    // Troop change event
+    document.getElementById("troop_id").addEventListener("change", function (event) {
+      event.preventDefault();
+      const troopId = this.value;
+      loadUnitsByTroop(troopId);
+    });
+
+    // Initial load
+    window.onload = loadRegions;
+  </script>
+</body>
+</html>
