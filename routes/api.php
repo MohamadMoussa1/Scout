@@ -42,3 +42,5 @@ Route::get('/regions', [RegionController::class, 'index']);
 Route::get('/regions/{region}/troops', [RegionController::class, 'getTroopsByRegion']);
 //Route to get units by troop ID
 Route::get('/troops/{troop}/units', [TroopController::class, 'getUnitsByTroop']);
+//Route to get badges
+Route::get('/scouts/{scout}/scoutbadges', [ScoutController::class, 'getScoutBadges']);

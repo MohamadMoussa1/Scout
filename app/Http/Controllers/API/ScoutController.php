@@ -13,6 +13,8 @@ use App\Models\ScoutBadge;
 use App\Models\AssignedTask;
 use App\Models\ActivityReport;
 use App\Models\Participation;
+use App\Models\Troop;
+use App\Models\Badge;
 
 class ScoutController extends Controller
 {
@@ -32,13 +34,7 @@ class ScoutController extends Controller
             200);
     }
 
-    /**
-     * Show the form for creating a new resource.
-     */
-    public function create()
-    {
-        //
-    }
+
 
     /**
      * Store a newly created resource in storage.
@@ -89,13 +85,6 @@ class ScoutController extends Controller
             200);
     }
 
-    /**
-     * Show the form for editing the specified resource.
-     */
-    public function edit(string $id)
-    {
-        //
-    }
 
     /**
      * Update the specified resource in storage.
@@ -146,5 +135,17 @@ class ScoutController extends Controller
                 'success' => true,
             ],
             200);
+    }
+    //get badges
+    public function getScoutBadges($scout)
+    {
+        $scoutBadges = ScoutBadge::with('badge')
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Badges retrieved successfully',
+            'success' => true,
+            'data' => $scoutBadges,
+        ], 200);
     }
 }

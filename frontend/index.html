@@ -113,6 +113,29 @@
       <div id="searchResult" class="result"></div>
     </div>
 
+    <!-- Get Scout Badges by ID -->
+    <div class="section">
+      <h3>Get Scout Badges</h3>
+    
+      <!-- Radio Buttons for Search Type -->
+      <div style="margin-bottom: 1rem;">
+        <label><input type="radio" name="badgeSearchType" value="id" checked> Search by ID</label>
+        <label><input type="radio" name="badgeSearchType" value="name"> Search by Name</label>
+      </div>
+    
+      <!-- Input for Scout ID or Name -->
+      <label for="badgeScoutInput">Enter Scout ID or Name</label>
+      <input type="text" id="badgeScoutInput" placeholder="e.g., 1 or John Doe" style="display: block; margin: 0.5rem 0; width: 100%; max-width: 400px;" />
+    
+      <!-- Action Buttons -->
+      <button onclick="getScoutBadges()">Get Badges</button>
+      <button onclick="document.getElementById('badgesResult').innerHTML = '';">Clear Badges</button>
+    
+      <!-- Result Container -->
+      <div id="badgesResult" class="result" style="margin-top: 1rem;"></div>
+    </div>
+    
+
 
     <!-- Update Scout -->
     <!-- Update Scout -->
@@ -168,6 +191,137 @@
       sessionStorage.clear();
       window.location.href = 'login.html';
     }
+
+    // Remove any previous getScoutBadges definitions above this line.
+    async function getScoutBadges() {
+    const input = document.getElementById('badgeScoutInput').value.trim();
+    const resultDiv = document.getElementById('badgesResult');
+    const searchType = document.querySelector('input[name="badgeSearchType"]:checked').value;
+    resultDiv.innerHTML = 'Loading...';
+
+    if (!input) {
+      resultDiv.innerHTML = `<span style="color:red;">Please enter a ${searchType.toUpperCase()}.</span>`;
+      return;
+    }
+
+    try {
+      let scouts = [];
+
+      if (searchType === 'id') {
+        // Fetch single scout by ID
+        const scoutRes = await fetch(`http://scout.test/api/scouts/${input}`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!scoutRes.ok) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        const scoutData = await scoutRes.json();
+
+        if (!scoutData.success || !scoutData.data) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        scouts = [scoutData.data];
+      } else {
+        // Fetch all scouts and search by name
+        const allRes = await fetch('http://scout.test/api/scouts', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!allRes.ok) {
+          throw new Error('Failed to fetch scouts');
+        }
+
+        const data = await allRes.json();
+
+        if (!data.success || !Array.isArray(data.data)) {
+          throw new Error('Scouts data invalid');
+        }
+
+        const inputLower = input.toLowerCase();
+
+        scouts = data.data.filter(s => {
+          const fullName = `${s.first_name} ${s.father_name} ${s.last_name}`.toLowerCase();
+          return (
+            s.first_name?.toLowerCase() === inputLower ||
+            s.father_name?.toLowerCase() === inputLower ||
+            s.last_name?.toLowerCase() === inputLower ||
+            fullName.includes(inputLower)
+          );
+        });
+
+        if (scouts.length === 0) {
+          resultDiv.innerHTML = '<span style="color:orange;">No scout found with that name.</span>';
+          return;
+        }
+      }
+
+      // Now fetch badges for each scout
+      let html = '';
+      for (const scout of scouts) {
+        const badgeRes = await fetch(`http://scout.test/api/scouts/${scout.id}/scoutbadges`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        html += `<div style="border:1px solid #2c3e50; margin:10px; padding:10px; background:#f9f9f9;">
+          <strong>ID:</strong> ${scout.id} <br>
+          <strong>Name:</strong> ${scout.first_name || ''} ${scout.father_name || ''} ${scout.last_name || ''} <br>
+          <strong>Birthdate:</strong> ${scout.birthdate || 'N/A'} <br>
+          <strong>Gender:</strong> ${scout.gender || 'N/A'} <br>
+          <strong>Contact Cell:</strong> ${scout.contact_tel_Cell || 'N/A'} <br>
+          <strong>Address:</strong> ${scout.address || 'N/A'} <br>
+        </div>`;
+
+        if (!badgeRes.ok) {
+          html += `<span style="color:orange;">Could not fetch badges for scout ID ${scout.id}.</span>`;
+          continue;
+        }
+
+        const badgeData = await badgeRes.json();
+
+        if (!badgeData.success || !Array.isArray(badgeData.data) || badgeData.data.length === 0) {
+          html += `<span style="color:orange;">No badges found for this scout.</span>`;
+          continue;
+        }
+
+        html += badgeData.data.map(badge => `
+          <div style="border:1px solid #ccc; margin:10px; padding:10px;">
+            <strong>ScoutBadge ID:</strong> ${badge.id} <br>
+            <strong>Badge ID:</strong> ${badge.badge_id} <br>
+            <strong>Scout ID:</strong> ${badge.scout_id} <br>
+            <strong>Awarded Date:</strong> ${badge.awarded_date || 'N/A'} <br>
+            <strong>Created At:</strong> ${badge.created_at || 'N/A'} <br>
+            <strong>Updated At:</strong> ${badge.updated_at || 'N/A'} <br>
+            <div style="margin-left:20px; margin-top:10px;">
+              <strong>Badge Info:</strong><br>
+              &nbsp;&nbsp;ID: ${badge.badge?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${badge.badge?.badge_name || 'N/A'}<br>
+              &nbsp;&nbsp;Description: ${badge.badge?.description || 'N/A'}<br>
+              &nbsp;&nbsp;Remarks: ${badge.badge?.remarks || 'N/A'}<br>
+              &nbsp;&nbsp;Created At: ${badge.badge?.created_at || 'N/A'}<br>
+              &nbsp;&nbsp;Updated At: ${badge.badge?.updated_at || 'N/A'}<br>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      resultDiv.innerHTML = html;
+
+    } catch (err) {
+      console.error('Error fetching scout badges:', err);
+      resultDiv.innerHTML = `<span style="color:red;">Failed to fetch scout badges: ${err.message}</span>`;
+    }
+  }
 
   async function viewAllScouts() {
   const list = document.getElementById("scoutList");
