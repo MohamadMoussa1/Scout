@@ -159,4 +159,15 @@ class ScoutController extends Controller
             'data' => $scoutRanks,
         ], 200);
     }   
+    public function getScoutTasks($scout)
+    {
+        $scoutTasks = AssignedTask::with('task')
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Tasks retrieved successfully',
+            'success' => true,
+            'data' => $scoutTasks,
+        ], 200);
+    }
 }

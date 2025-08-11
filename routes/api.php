@@ -46,3 +46,5 @@ Route::get('/troops/{troop}/units', [TroopController::class, 'getUnitsByTroop'])
 Route::get('/scouts/{scout}/scoutbadges', [ScoutController::class, 'getScoutBadges']);
 //Route to get ranks
 Route::get('/scouts/{scout}/scoutranks', [ScoutController::class, 'getScoutRanks']);
+//Route to get tasks
+Route::get('/scouts/{scout}/scouttasks', [ScoutController::class, 'getScoutTasks']);
