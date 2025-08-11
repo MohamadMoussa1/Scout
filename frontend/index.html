@@ -186,6 +186,23 @@
   <div id="ranksResult" class="result"></div>
 </div>
 
+<!-- Get Scout Tasks by ID or Name -->
+<div class="section">
+  <h3>Get Scout Tasks</h3>
+
+  <div style="margin-bottom: 1rem;">
+    <label><input type="radio" name="taskSearchType" value="id" checked> Search by ID</label>
+    <label><input type="radio" name="taskSearchType" value="name"> Search by Name</label>
+  </div>
+
+  <label for="taskScoutInput">Enter Scout ID or Name</label>
+  <input type="text" id="taskScoutInput" placeholder="e.g., 1 or John Doe" style="display: block; margin: 0.5rem 0; width: 100%; max-width: 400px;" />
+
+  <button onclick="getScoutTasks()">Get Tasks</button>
+  <button onclick="document.getElementById('tasksResult').innerHTML = '';">Clear Tasks</button>
+
+  <div id="tasksResult" class="result" style="margin-top: 1rem;"></div>
+</div>
 
     <!-- Update Scout -->
     <!-- Update Scout -->
@@ -457,7 +474,7 @@
           <strong>ScoutRank ID:</strong> ${rank.id} <br>
           <strong>Rank ID:</strong> ${rank.rank_id} <br>
           <strong>Scout ID:</strong> ${rank.scout_id} <br>
-          <strong>Issued Date:</strong> ${rank.issued_date || 'N/A'} <br>
+          <strong>assigned Date:</strong> ${rank.assigned_date || 'N/A'} <br>
           <strong>Created At:</strong> ${rank.created_at || 'N/A'} <br>
           <strong>Updated At:</strong> ${rank.updated_at || 'N/A'} <br>
           <div style="margin-left:20px; margin-top:10px;">
@@ -480,6 +497,136 @@
   }
 }
 
+
+  async function getScoutTasks() {
+    const input = document.getElementById('taskScoutInput').value.trim();
+    const resultDiv = document.getElementById('tasksResult');
+    const searchType = document.querySelector('input[name="taskSearchType"]:checked').value;
+    resultDiv.innerHTML = 'Loading...';
+
+    if (!input) {
+      resultDiv.innerHTML = `<span style="color:red;">Please enter a ${searchType.toUpperCase()}.</span>`;
+      return;
+    }
+
+    try {
+      let scouts = [];
+
+      if (searchType === 'id') {
+        // Fetch single scout by ID
+        const scoutRes = await fetch(`http://scout.test/api/scouts/${input}`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!scoutRes.ok) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        const scoutData = await scoutRes.json();
+
+        if (!scoutData.success || !scoutData.data) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        scouts = [scoutData.data];
+      } else {
+        // Fetch all scouts and search by name
+        const allRes = await fetch('http://scout.test/api/scouts', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!allRes.ok) {
+          throw new Error('Failed to fetch scouts');
+        }
+
+        const data = await allRes.json();
+
+        if (!data.success || !Array.isArray(data.data)) {
+          throw new Error('Scouts data invalid');
+        }
+
+        const inputLower = input.toLowerCase();
+
+        scouts = data.data.filter(s => {
+          const fullName = `${s.first_name} ${s.father_name} ${s.last_name}`.toLowerCase();
+          return (
+            s.first_name?.toLowerCase() === inputLower ||
+            s.father_name?.toLowerCase() === inputLower ||
+            s.last_name?.toLowerCase() === inputLower ||
+            fullName.includes(inputLower)
+          );
+        });
+
+        if (scouts.length === 0) {
+          resultDiv.innerHTML = '<span style="color:orange;">No scout found with that name.</span>';
+          return;
+        }
+      }
+
+      // Now fetch tasks for each scout
+      let html = '';
+      for (const scout of scouts) {
+        const taskRes = await fetch(`http://scout.test/api/scouts/${scout.id}/scouttasks`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        html += `<div style="border:1px solid #2c3e50; margin:10px; padding:10px; background:#f9f9f9;">
+          <strong>ID:</strong> ${scout.id} <br>
+          <strong>Name:</strong> ${scout.first_name || ''} ${scout.father_name || ''} ${scout.last_name || ''} <br>
+          <strong>Birthdate:</strong> ${scout.birthdate || 'N/A'} <br>
+          <strong>Gender:</strong> ${scout.gender || 'N/A'} <br>
+          <strong>Contact Cell:</strong> ${scout.contact_tel_Cell || 'N/A'} <br>
+          <strong>Address:</strong> ${scout.address || 'N/A'} <br>
+        </div>`;
+
+        if (!taskRes.ok) {
+          html += `<span style="color:orange;">Could not fetch tasks for scout ID ${scout.id}.</span>`;
+          continue;
+        }
+
+        const taskData = await taskRes.json();
+
+        if (!taskData.success || !Array.isArray(taskData.data) || taskData.data.length === 0) {
+          html += `<span style="color:orange;">No tasks found for this scout.</span>`;
+          continue;
+        }
+
+        html += taskData.data.map(task => `
+          <div style="border:1px solid #3498db; margin:10px; padding:10px; background:#f0f8ff;">
+            <strong>Assigned Task ID:</strong> ${task.id} <br>
+            <strong>Task ID:</strong> ${task.task_id} <br>
+            <strong>Scout ID:</strong> ${task.scout_id} <br>
+            <strong>Assigned Date:</strong> ${task.assigned_date || 'N/A'} <br>
+            <strong>Remark:</strong> ${task.remark || 'N/A'} <br>
+            <strong>Created At:</strong> ${task.created_at || 'N/A'} <br>
+            <strong>Updated At:</strong> ${task.updated_at || 'N/A'} <br>
+            <div style="margin-left:20px; margin-top:10px;">
+              <strong>Task Info:</strong><br>
+              &nbsp;&nbsp;ID: ${task.task?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${task.task?.task_name || 'N/A'}<br>
+              &nbsp;&nbsp;Remarks: ${task.task?.remarks || 'N/A'}<br>
+              &nbsp;&nbsp;Created At: ${task.task?.created_at || 'N/A'}<br>
+              &nbsp;&nbsp;Updated At: ${task.task?.updated_at || 'N/A'}<br>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      resultDiv.innerHTML = html;
+
+    } catch (err) {
+      console.error('Error fetching scout tasks:', err);
+      resultDiv.innerHTML = `<span style="color:red;">Failed to fetch scout tasks: ${err.message}</span>`;
+    }
+  }
 
   async function viewAllScouts() {
   const list = document.getElementById("scoutList");
