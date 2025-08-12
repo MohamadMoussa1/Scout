@@ -48,3 +48,7 @@ Route::get('/scouts/{scout}/scoutbadges', [ScoutController::class, 'getScoutBadg
 Route::get('/scouts/{scout}/scoutranks', [ScoutController::class, 'getScoutRanks']);
 //Route to get tasks
 Route::get('/scouts/{scout}/scouttasks', [ScoutController::class, 'getScoutTasks']);
+//Route to get scout progress
+Route::get('/scouts/{scout}/scoutprogress', [ScoutController::class, 'getScoutProgress']);
+//Route to get scout participation
+Route::get('/scouts/{scout}/scoutparticipation', [ScoutController::class, 'getScoutParticipation']);

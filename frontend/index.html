@@ -204,6 +204,42 @@
   <div id="tasksResult" class="result" style="margin-top: 1rem;"></div>
 </div>
 
+<!-- Get Scout Progress by ID or Name -->
+<div class="section">
+  <h3>Get Scout Progress</h3>
+
+  <div style="margin-bottom: 1rem;">
+    <label><input type="radio" name="progressSearchType" value="id" checked> Search by ID</label>
+    <label><input type="radio" name="progressSearchType" value="name"> Search by Name</label>
+  </div>
+
+  <label for="progressScoutInput">Enter Scout ID or Name</label>
+  <input type="text" id="progressScoutInput" placeholder="e.g., 1 or John Doe" style="display: block; margin: 0.5rem 0; width: 100%; max-width: 400px;" />
+
+  <button onclick="getScoutProgress()">Get Progress</button>
+  <button onclick="document.getElementById('progressResult').innerHTML = '';">Clear Progress</button>
+
+  <div id="progressResult" class="result" style="margin-top: 1rem;"></div>
+</div>
+
+<!-- Get Scout Participation by ID or Name -->
+<div class="section">
+  <h3>Get Scout Participation</h3>
+
+  <div style="margin-bottom: 1rem;">
+    <label><input type="radio" name="participationSearchType" value="id" checked> Search by ID</label>
+    <label><input type="radio" name="participationSearchType" value="name"> Search by Name</label>
+  </div>
+
+  <label for="participationScoutInput">Enter Scout ID or Name</label>
+  <input type="text" id="participationScoutInput" placeholder="e.g., 1 or John Doe" style="display: block; margin: 0.5rem 0; width: 100%; max-width: 400px;" />
+
+  <button onclick="getScoutParticipation()">Get Participation</button>
+  <button onclick="document.getElementById('participationResult').innerHTML = '';">Clear</button>
+
+  <div id="participationResult" class="result" style="margin-top: 1rem;"></div>
+</div>
+
     <!-- Update Scout -->
     <!-- Update Scout -->
 <div class="section">
@@ -625,6 +661,266 @@
     } catch (err) {
       console.error('Error fetching scout tasks:', err);
       resultDiv.innerHTML = `<span style="color:red;">Failed to fetch scout tasks: ${err.message}</span>`;
+    }
+  }
+
+  async function getScoutProgress() {
+    const input = document.getElementById('progressScoutInput').value.trim();
+    const resultDiv = document.getElementById('progressResult');
+    const searchType = document.querySelector('input[name="progressSearchType"]:checked').value;
+    resultDiv.innerHTML = 'Loading...';
+
+    if (!input) {
+      resultDiv.innerHTML = `<span style="color:red;">Please enter a ${searchType.toUpperCase()}.</span>`;
+      return;
+    }
+
+    try {
+      let scouts = [];
+
+      if (searchType === 'id') {
+        // Fetch single scout by ID
+        const scoutRes = await fetch(`http://scout.test/api/scouts/${input}`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!scoutRes.ok) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        const scoutData = await scoutRes.json();
+
+        if (!scoutData.success || !scoutData.data) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        scouts = [scoutData.data];
+      } else {
+        // Fetch all scouts and search by name
+        const allRes = await fetch('http://scout.test/api/scouts', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!allRes.ok) {
+          throw new Error('Failed to fetch scouts');
+        }
+
+        const data = await allRes.json();
+
+        if (!data.success || !Array.isArray(data.data)) {
+          throw new Error('Scouts data invalid');
+        }
+
+        const inputLower = input.toLowerCase();
+
+        scouts = data.data.filter(s => {
+          const fullName = `${s.first_name} ${s.father_name} ${s.last_name}`.toLowerCase();
+          return (
+            s.first_name?.toLowerCase() === inputLower ||
+            s.father_name?.toLowerCase() === inputLower ||
+            s.last_name?.toLowerCase() === inputLower ||
+            fullName.includes(inputLower)
+          );
+        });
+
+        if (scouts.length === 0) {
+          resultDiv.innerHTML = '<span style="color:orange;">No scout found with that name.</span>';
+          return;
+        }
+      }
+
+      // Now fetch progress for each scout
+      let html = '';
+      for (const scout of scouts) {
+        const progressRes = await fetch(`http://scout.test/api/scouts/${scout.id}/scoutprogress`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        html += `<div style="border:1px solid #2c3e50; margin:10px; padding:10px; background:#f9f9f9;">
+          <strong>ID:</strong> ${scout.id} <br>
+          <strong>Name:</strong> ${scout.first_name || ''} ${scout.father_name || ''} ${scout.last_name || ''} <br>
+          <strong>Birthdate:</strong> ${scout.birthdate || 'N/A'} <br>
+          <strong>Gender:</strong> ${scout.gender || 'N/A'} <br>
+          <strong>Contact Cell:</strong> ${scout.contact_tel_Cell || 'N/A'} <br>
+          <strong>Address:</strong> ${scout.address || 'N/A'} <br>
+        </div>`;
+
+        if (!progressRes.ok) {
+          html += `<span style="color:orange;">Could not fetch progress for scout ID ${scout.id}.</span>`;
+          continue;
+        }
+
+        const progressData = await progressRes.json();
+
+        if (!progressData.success || !Array.isArray(progressData.data) || progressData.data.length === 0) {
+          html += `<span style="color:orange;">No progress records found for this scout.</span>`;
+          continue;
+        }
+
+        html += progressData.data.map(progress => `
+          <div style="border:1px solid #3498db; margin:10px; padding:10px; background:#f0f8ff;">
+            <strong>Progress ID:</strong> ${progress.id} <br>
+            <strong>Scout ID:</strong> ${progress.scout_id} <br>
+            <strong>Achieved Date:</strong> ${progress.achieved_date || 'N/A'} <br>
+            <strong>Remarks:</strong> ${progress.remarks || 'N/A'} <br>
+            <strong>Created At:</strong> ${progress.created_at || 'N/A'} <br>
+            <strong>Updated At:</strong> ${progress.updated_at || 'N/A'} <br>
+            <div style="margin-left:20px; margin-top:10px;">
+              <strong>T-Level Info:</strong><br>
+              &nbsp;&nbsp;ID: ${progress.tlevel?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${progress.tlevel?.name || 'N/A'}<br>
+              <strong>Committee Info:</strong><br>
+              &nbsp;&nbsp;ID: ${progress.committee?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Name: ${progress.committee?.name || 'N/A'}<br>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      resultDiv.innerHTML = html;
+
+    } catch (error) {
+      console.error('Error fetching scout progress:', error);
+      resultDiv.innerHTML = `<span style="color:red;">${error.message}</span>`;
+    }
+  }
+
+  async function getScoutParticipation() {
+    const input = document.getElementById('participationScoutInput').value.trim();
+    const resultDiv = document.getElementById('participationResult');
+    const searchType = document.querySelector('input[name="participationSearchType"]:checked').value;
+    resultDiv.innerHTML = 'Loading...';
+
+    if (!input) {
+      resultDiv.innerHTML = `<span style="color:red;">Please enter a ${searchType.toUpperCase()}.</span>`;
+      return;
+    }
+
+    try {
+      let scouts = [];
+
+      if (searchType === 'id') {
+        // Fetch single scout by ID
+        const scoutRes = await fetch(`http://scout.test/api/scouts/${input}`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!scoutRes.ok) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        const scoutData = await scoutRes.json();
+
+        if (!scoutData.success || !scoutData.data) {
+          resultDiv.innerHTML = '<span style="color:orange;">Scout not found.</span>';
+          return;
+        }
+
+        scouts = [scoutData.data];
+      } else {
+        // Fetch all scouts and search by name
+        const allRes = await fetch('http://scout.test/api/scouts', {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        if (!allRes.ok) {
+          throw new Error('Failed to fetch scouts');
+        }
+
+        const data = await allRes.json();
+
+        if (!data.success || !Array.isArray(data.data)) {
+          throw new Error('Scouts data invalid');
+        }
+
+        const inputLower = input.toLowerCase();
+
+        scouts = data.data.filter(s => {
+          const fullName = `${s.first_name} ${s.father_name} ${s.last_name}`.toLowerCase();
+          return (
+            s.first_name?.toLowerCase() === inputLower ||
+            s.father_name?.toLowerCase() === inputLower ||
+            s.last_name?.toLowerCase() === inputLower ||
+            fullName.includes(inputLower)
+          );
+        });
+
+        if (scouts.length === 0) {
+          resultDiv.innerHTML = '<span style="color:orange;">No scout found with that name.</span>';
+          return;
+        }
+      }
+
+      // Now fetch participation for each scout
+      let html = '';
+      for (const scout of scouts) {
+        const participationRes = await fetch(`http://scout.test/api/scouts/${scout.id}/scoutparticipation`, {
+          headers: {
+            'Authorization': 'Bearer ' + localStorage.getItem('token')
+          }
+        });
+
+        html += `<div style="border:1px solid #2c3e50; margin:10px; padding:10px; background:#f9f9f9;">
+          <strong>ID:</strong> ${scout.id} <br>
+          <strong>Name:</strong> ${scout.first_name || ''} ${scout.father_name || ''} ${scout.last_name || ''} <br>
+          <strong>Birthdate:</strong> ${scout.birthdate || 'N/A'} <br>
+          <strong>Gender:</strong> ${scout.gender || 'N/A'} <br>
+          <strong>Contact Cell:</strong> ${scout.contact_tel_Cell || 'N/A'} <br>
+          <strong>Address:</strong> ${scout.address || 'N/A'} <br>
+        </div>`;
+
+        if (!participationRes.ok) {
+          html += `<span style="color:orange;">Could not fetch participation for scout ID ${scout.id}.</span>`;
+          continue;
+        }
+
+        const participationData = await participationRes.json();
+
+        if (!participationData.success || !Array.isArray(participationData.data) || participationData.data.length === 0) {
+          html += `<span style="color:orange;">No participation records found for this scout.</span>`;
+          continue;
+        }
+
+        html += participationData.data.map(participation => `
+          <div style="border:1px solid #3498db; margin:10px; padding:10px; background:#f0f8ff;">
+            <strong>Participation ID:</strong> ${participation.id} <br>
+            <strong>Activity Report ID:</strong> ${participation.activity_report_id} <br>
+            <strong>Scout ID:</strong> ${participation.scout_id} <br>
+            <strong>Result:</strong> ${participation.result || 'N/A'} <br>
+            <strong>Remarks:</strong> ${participation.remarks || 'N/A'} <br>
+            <strong>Created At:</strong> ${participation.created_at || 'N/A'} <br>
+            <strong>Updated At:</strong> ${participation.updated_at || 'N/A'} <br>
+            <div style="margin-left:20px; margin-top:10px;">
+              <strong>Activity Report Info:</strong><br>
+              &nbsp;&nbsp;ID: ${participation.activity_report?.id || 'N/A'}<br>
+              &nbsp;&nbsp;Title: ${participation.activity_report?.title || 'N/A'}<br>
+              &nbsp;&nbsp;Description: ${participation.activity_report?.description || 'N/A'}<br>
+              &nbsp;&nbsp;Activity Type ID: ${participation.activity_report?.activity_type_id || 'N/A'}<br>
+              &nbsp;&nbsp;Start Date: ${participation.activity_report?.start_date || 'N/A'}<br>
+              &nbsp;&nbsp;End Date: ${participation.activity_report?.end_date || 'N/A'}<br>
+            </div>
+          </div>
+        `).join("");
+      }
+
+      resultDiv.innerHTML = html;
+
+    } catch (error) {
+      console.error('Error fetching scout participation:', error);
+      resultDiv.innerHTML = `<span style="color:red;">${error.message}</span>`;
     }
   }
 

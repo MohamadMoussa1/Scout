@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class ScoutProgress extends Model
 {
+    protected $table='scout_progress';
     public function scout()
     {
         return $this->belongsTo(Scout::class);

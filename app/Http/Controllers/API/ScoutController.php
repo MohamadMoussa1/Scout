@@ -16,6 +16,8 @@ use App\Models\Participation;
 use App\Models\Troop;
 use App\Models\Badge;
 use App\Models\Rank;
+use App\Models\ScoutProgress;
+
 class ScoutController extends Controller
 {
     /**
@@ -168,6 +170,28 @@ class ScoutController extends Controller
             'message' => 'Tasks retrieved successfully',
             'success' => true,
             'data' => $scoutTasks,
+        ], 200);
+    }
+    public function getScoutProgress($scout)
+    {
+        $scoutProgress = ScoutProgress::with(['tlevel', 'committee'])
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Progress retrieved successfully',
+            'success' => true,
+            'data' => $scoutProgress,
+        ], 200);
+    }
+    public function getScoutParticipation($scout)
+    {
+        $scoutParticipation = Participation::with('activityReport',)
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Participation retrieved successfully',
+            'success' => true,
+            'data' => $scoutParticipation,
         ], 200);
     }
 }
