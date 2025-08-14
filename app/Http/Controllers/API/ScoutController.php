@@ -194,4 +194,14 @@ class ScoutController extends Controller
             'data' => $scoutParticipation,
         ], 200);
     }
+    public function getScoutTransferCard($scout){
+        $scoutTransferCard = TransferCard::with('scout','fromUnit','toUnit')
+            ->where('scout_id', $scout)
+            ->get();
+        return response()->json([
+            'message' => 'Transfer card retrieved successfully',
+            'success' => true,
+            'data' => $scoutTransferCard,
+        ], 200);
+    }
 }

@@ -6,6 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class TransferCard extends Model
 {
+    protected $table='transfer_cards';
     public function scout()
     {
         return $this->belongsTo(Scout::class);

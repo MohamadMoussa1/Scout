@@ -52,3 +52,5 @@ Route::get('/scouts/{scout}/scouttasks', [ScoutController::class, 'getScoutTasks
 Route::get('/scouts/{scout}/scoutprogress', [ScoutController::class, 'getScoutProgress']);
 //Route to get scout participation
 Route::get('/scouts/{scout}/scoutparticipation', [ScoutController::class, 'getScoutParticipation']);
+//Route to get scout transfer card
+Route::get('/scouts/{scout}/scouttransfercard', [ScoutController::class, 'getScoutTransferCard']);
