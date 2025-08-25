@@ -29,11 +29,17 @@ class Scout extends Model
 
     public function unit()
     {
-        return $this->belongsTo(Unit::class, 'current_unit_id');
+        return $this->belongsTo(Unit::class, 'current_unit_id', 'id');
     }
+    
     public function region()
     {
-        return $this->belongsTo(Region::class);
+        return $this->belongsTo(Region::class, 'region_id', 'id');
+    }
+    
+    public function troop()
+    {
+        return $this->belongsTo(Troop::class, 'troop_id', 'id');
     }
     public function transferCards()
     {

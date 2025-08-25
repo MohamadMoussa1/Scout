@@ -16,7 +16,7 @@ class Unit extends Model
     }
     public function scouts()
     {
-        return $this->hasMany(Scout::class);
+        return $this->hasMany(Scout::class, 'current_unit_id');
     }
     public function transfersFrom()
     {

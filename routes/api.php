@@ -4,8 +4,9 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\ScoutController;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\Api\RegionController;
-use App\Http\Controllers\Api\TroopController;
+use App\Http\Controllers\API\RegionController;
+use App\Http\Controllers\API\TroopController;
+use App\Http\Controllers\API\StatisticsController;
 // API Routes\
 //-------------//
 //Authentication routes
@@ -23,6 +24,8 @@ Route::post('/logout', [AuthController::class, 'logout'])->middleware('auth:sanc
 Route::get('/scouts', [ScoutController::class, 'index']);
 // Route to create a new scout
 Route::post('/scouts', [ScoutController::class, 'store']);
+//Route to get scouts statistics
+Route::get('/scouts/statistics', [StatisticsController::class, 'showScoutsStatistics']);
 // Route to get a specific scout by ID
 Route::get('/scouts/{id}', [ScoutController::class, 'show']);
 // Route to update a specific scout by ID
@@ -42,6 +45,8 @@ Route::get('/regions', [RegionController::class, 'index']);
 Route::get('/regions/{region}/troops', [RegionController::class, 'getTroopsByRegion']);
 //Route to get units by troop ID
 Route::get('/troops/{troop}/units', [TroopController::class, 'getUnitsByTroop']);
+
+
 //Route to get badges
 Route::get('/scouts/{scout}/scoutbadges', [ScoutController::class, 'getScoutBadges']);
 //Route to get ranks
@@ -54,3 +59,6 @@ Route::get('/scouts/{scout}/scoutprogress', [ScoutController::class, 'getScoutPr
 Route::get('/scouts/{scout}/scoutparticipation', [ScoutController::class, 'getScoutParticipation']);
 //Route to get scout transfer card
 Route::get('/scouts/{scout}/scouttransfercard', [ScoutController::class, 'getScoutTransferCard']);
+
+
+

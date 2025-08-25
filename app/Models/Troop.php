@@ -15,4 +15,8 @@ class Troop extends Model
     {
         return $this->hasMany(Unit::class);
     }
+    public function scouts()
+    {
+        return $this->hasMany(Scout::class, 'troop_id');
+    }
 }
